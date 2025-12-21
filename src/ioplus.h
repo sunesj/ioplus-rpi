@@ -120,6 +120,7 @@ typedef enum
 	I2C_MEM_1WB_T_END = I2C_MEM_1WB_T1 + OWB_SENS_CNT * OWB_TEMP_SIZE_B,
 	I2C_MEM_ADC_MAX = I2C_MEM_1WB_T_END,
 	I2C_MEM_ADC_MIN = I2C_MEM_ADC_MAX + 2 * 4,
+	I2C_MEM_INT_ENABLE = I2C_MEM_ADC_MIN + 2 * 4,
 	// od pulses movement parameters
 		I2C_MEM_ODP_ACC = I2C_MEM_1WB_T_END,
 		I2C_MEM_ODP_DEC = I2C_MEM_ODP_ACC + 2,
@@ -187,6 +188,8 @@ int doInCmdSet(int argc, char *argv[]);
 
 int optoChGet(int dev, u8 channel, OutStateEnumType *state);
 int doOptoRead(int argc, char *argv[]);
+int doOptoIntRead(int argc, char *argv[]);
+int doOptoIntWrite(int argc, char *argv[]);
 int doOptoEdgeWrite(int argc, char *argv[]);
 int doOptoEdgeRead(int argc, char *argv[]);
 int doOptoCntRead(int argc, char *argv[]);

@@ -25,7 +25,7 @@
 
 #define VERSION_BASE	(int)1
 #define VERSION_MAJOR	(int)3
-#define VERSION_MINOR	(int)8
+#define VERSION_MINOR	(int)9
 
 #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
 
@@ -36,7 +36,7 @@
 u8 gHwVer = 0;
 
 char *warranty =
-	"	       Copyright (c) 2016-2023 Sequent Microsystems\n"
+	"	       Copyright (c) 2016-2026 Sequent Microsystems\n"
 		"                                                             \n"
 		"		This program is free software; you can redistribute it and/or modify\n"
 		"		it under the terms of the GNU Leser General Public License as published\n"
@@ -1258,6 +1258,18 @@ const CliCmdType CMD_OPTO_READ =
 		"\tUsage:		ioplus <stack> optrd <channel>\n",
 		"\tUsage:		ioplus <stack> optrd\n",
 		"\tExample:		ioplus 0 optrd 2; Read Status of Optocoupled input ch #2 on Board #0\n"};
+
+const CliCmdType CMD_OPTO_INT_READ =
+	{"ointrd", 2, &doOptoIntRead, "\tointrd:		Read optocoupled inputs interrupt enable status\n",
+		"\tUsage:		ioplus <stack> ointrd <channel>\n",
+		"\tUsage:		ioplus <stack> ointrd\n",
+		"\tExample:		ioplus 0 ointrd 2; Read Interrupt enable Status of Optocoupled input ch #2 on Board #0\n"};
+
+const CliCmdType CMD_OPTO_INT_WRITE = {"ointwr", 2, &doOptoIntWrite,
+	"\tointwr:		Set Opto interrupt on-change enable On/Off\n",
+	"\tUsage:		ioplus <stack> ointwr <channel> <on/off; 0/1>\n",
+	"\tUsage:		ioplus <stack> ointwr <value>\n",
+	"\tExample:		ioplus 0 ointwr 2 1; Set Opto input #2 on Board #0 to generate on-change interrupt\n"};
 
 const CliCmdType CMD_OPTO_EDGE_WRITE =
 	{"optedgewr", 2, &doOptoEdgeWrite,
@@ -2983,7 +2995,7 @@ int doOwbIdGet(int argc, char *argv[])
 
 	memcpy(&romID, &buff[0], 8);
 
-	printf("0x%llx\n", romID);
+	printf("0x%lx\n", romID);
 	return OK;
 }
 
@@ -3075,6 +3087,8 @@ const CliCmdType *gCmdArray[] = {&CMD_VERSION, &CMD_HELP, &CMD_WAR, &CMD_PINOUT,
 	&CMD_GPIO_ENC_CNT_READ,
 	&CMD_GPIO_ENC_CNT_RESET,
 	&CMD_OPTO_READ,
+	&CMD_OPTO_INT_READ,
+	&CMD_OPTO_INT_WRITE,
 	&CMD_OPTO_EDGE_READ,
 	&CMD_OPTO_EDGE_WRITE,
 	&CMD_OPTO_CNT_READ,

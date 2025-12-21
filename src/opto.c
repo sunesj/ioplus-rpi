@@ -55,6 +55,99 @@ int optoGet(int dev, int *val)
 	return OK;
 }
 
+// Opto interrupt generation
+int optoIntChGet(int dev, u8 channel, OutStateEnumType *state)
+{
+	u8 buff[2];
+
+	if (NULL == state)
+	{
+		return ERROR;
+	}
+
+	if ( (channel < CHANNEL_NR_MIN) || (channel > OPTO_IN_CH_NR_MAX))
+	{
+		printf("Invalid opto channel nr!\n");
+		return ERROR;
+	}
+
+	if (FAIL == i2cReadByteAS(dev, I2C_MEM_INT_ENABLE, buff))
+	{
+		return ERROR;
+	}
+
+	if (buff[0] & (1 << (channel - 1)))
+	{
+		*state = ON;
+	}
+	else
+	{
+		*state = OFF;
+	}
+	return OK;
+}
+
+int optoIntGet(int dev, int *val)
+{
+	u8 buff[2];
+
+	if (NULL == val)
+	{
+		return ERROR;
+	}
+
+	if (FAIL == i2cReadByteAS(dev, I2C_MEM_INT_ENABLE, buff))
+	{
+		return ERROR;
+	}
+	*val = buff[0];
+	return OK;
+}
+
+int optoIntChSet(int dev, u8 channel, OutStateEnumType state)
+{
+	int resp = 0;
+	u8 buff[2];
+
+	if ( (channel < CHANNEL_NR_MIN) || (channel > RELAY_CH_NR_MAX))
+	{
+		printf("Invalid relay nr!\n");
+		return ERROR;
+	}
+	if (FAIL == i2cMem8Read(dev, I2C_MEM_INT_ENABLE, buff, 1))
+	{
+		return FAIL;
+	}
+
+	switch (state)
+	{
+	case OFF:
+		buff[0] &= ~ (1 << (channel - 1));
+		resp = i2cMem8Write(dev, I2C_MEM_INT_ENABLE, buff, 1);
+		break;
+	case ON:
+		buff[0] |= 1 << (channel - 1);
+		resp = i2cMem8Write(dev, I2C_MEM_INT_ENABLE, buff, 1);
+		break;
+	default:
+		printf("Invalid interrupt state!\n");
+		return ERROR;
+		break;
+	}
+
+	return resp;
+}
+
+int optoIntSet(int dev, int val)
+{
+	u8 buff[2];
+
+	buff[0] = 0xff & val;
+
+	return i2cMem8Write(dev, I2C_MEM_INT_ENABLE, buff, 1);
+}
+
+
 int optoEdgeGet(int dev, u8 channel, u8 *val)
 {
 	u8 buff[2];
@@ -233,6 +326,9 @@ int optoEncRstCnt(int dev, u8 channel)
 	return OK;
 }
 
+// CLI callback functions
+
+
 int doOptoRead(int argc, char *argv[])
 {
 	int pin = 0;
@@ -281,6 +377,167 @@ int doOptoRead(int argc, char *argv[])
 	else
 	{
 		return ARG_CNT_ERR;
+	}
+	return OK;
+}
+
+int doOptoIntRead(int argc, char *argv[])
+{
+	int pin = 0;
+	int val = 0;
+	int dev = 0;
+	OutStateEnumType state = STATE_COUNT;
+
+	dev = doBoardInit(atoi(argv[1]));
+	if (dev <= 0)
+	{
+		return ERROR;
+	}
+
+	if (argc == 4)
+	{
+		pin = atoi(argv[3]);
+		if ( (pin < CHANNEL_NR_MIN) || (pin > OPTO_IN_CH_NR_MAX))
+		{
+			printf("Opto input channel number value out of range!\n");
+			return ARG_ERR;
+		}
+
+		if (OK != optoIntChGet(dev, pin, &state))
+		{
+			printf("Fail to read!\n");
+			return ERROR;
+		}
+		if (state != 0)
+		{
+			printf("1\n");
+		}
+		else
+		{
+			printf("0\n");
+		}
+	}
+	else if (argc == 3)
+	{
+		if (OK != optoIntGet(dev, &val))
+		{
+			printf("Fail to read!\n");
+			return ERROR;
+		}
+		printf("%d\n", val);
+	}
+	else
+	{
+		return ARG_CNT_ERR;
+	}
+	return OK;
+}
+
+int doOptoIntWrite(int argc, char *argv[])
+{
+	int pin = 0;
+	OutStateEnumType state = STATE_COUNT;
+	int val = 0;
+	int dev = 0;
+	OutStateEnumType stateR = STATE_COUNT;
+	int valR = 0;
+	int retry = 0;
+
+	if ( (argc != 5) && (argc != 4))
+	{
+//		printf("%s", CMD_OPTO_INT_WRITE.usage1);
+//		printf("%s", CMD_RELAY_WRITE.usage2);
+		return (FAIL);
+	}
+
+	dev = doBoardInit(atoi(argv[1]));
+	if (dev <= 0)
+	{
+		return (FAIL);
+	}
+	if (argc == 5)
+	{
+		pin = atoi(argv[3]);
+		if ( (pin < CHANNEL_NR_MIN) || (pin > OPTO_IN_CH_NR_MAX))
+		{
+			printf("Opto ch number value out of range\n");
+			return (FAIL);
+		}
+
+		/**/if ( (strcasecmp(argv[4], "up") == 0)
+			|| (strcasecmp(argv[4], "on") == 0))
+			state = ON;
+		else if ( (strcasecmp(argv[4], "down") == 0)
+			|| (strcasecmp(argv[4], "off") == 0))
+			state = OFF;
+		else
+		{
+			if ( (atoi(argv[4]) >= STATE_COUNT) || (atoi(argv[4]) < 0))
+			{
+				printf("Invalid opto interrupt state!\n");
+				return (FAIL);
+			}
+			state = (OutStateEnumType)atoi(argv[4]);
+		}
+
+		retry = RETRY_TIMES;
+
+		while ( (retry > 0) && (stateR != state))
+		{
+			if (OK != optoIntChSet(dev, pin, state))
+			{
+				printf("Fail to write interrupt enable\n");
+				return (FAIL);
+			}
+			if (OK != optoIntChGet(dev, pin, &stateR))
+			{
+				printf("Fail to read interrupt enable\n");
+				return (FAIL);
+			}
+			retry--;
+		}
+#ifdef DEBUG_I
+		if(retry < RETRY_TIMES)
+		{
+			printf("retry %d times\n", 3-retry);
+		}
+#endif
+		if (retry == 0)
+		{
+			printf("Fail to write interrupt enable\n");
+			return (FAIL);
+		}
+	}
+	else
+	{
+		val = atoi(argv[3]);
+		if (val < 0 || val > 255)
+		{
+			printf("Invalid interrupt enable value\n");
+			return (FAIL);
+		}
+
+		retry = RETRY_TIMES;
+		valR = -1;
+		while ( (retry > 0) && (valR != val))
+		{
+
+			if (OK != optoIntSet(dev, val))
+			{
+				printf("Fail to write interrupt enable!\n");
+				return (FAIL);
+			}
+			if (OK != optoIntGet(dev, &valR))
+			{
+				printf("Fail to read relay!\n");
+				return (FAIL);
+			}
+		}
+		if (retry == 0)
+		{
+			printf("Fail to write relay!\n");
+			return (FAIL);
+		}
 	}
 	return OK;
 }
