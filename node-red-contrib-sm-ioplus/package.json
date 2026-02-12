@@ -2,7 +2,7 @@
   "name": "node-red-contrib-sm-ioplus",
   "version": "1.0.3",
   "bundleDependencies": false,
-  "dependencies": {
+  "optionalDependencies": {
     "i2c-bus": "^5.2.0"
   },
   "deprecated": false,
