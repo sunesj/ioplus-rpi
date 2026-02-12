@@ -1,6 +1,6 @@
 module.exports = function(RED) {
     "use strict";
-    var I2C = require("i2c-bus");
+    var I2C; if (process.platform === "linux") { I2C = require("i2c-bus"); } else { I2C = require("./i2c-mock.js"); console.log("IOPLUS: Mac detected, using Mock."); }
     const DEFAULT_HW_ADD = 0x28;
 
     const I2C_MEM_RELAY_VAL_ADD = 0;   
