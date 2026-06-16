@@ -2584,7 +2584,7 @@ const CliCmdType CMD_PWM_FREQ_WRITE =
 		"\tpwmfwr:		Write open dran output pwm frequency in Hz [10..64000]\n",
 		"\tUsage:		ioplus <stack> pwmfwr <value>\n",
 		"\tUsage:		ioplus <stack> pwmfwr <channel> <value>\n",
-		"\tExample:		ioplus 0 dacwr 200; Set the open-drain output pwm frequency to 200Hz \n"};
+		"\tExample:		ioplus 0 pwmfwr 200; Set the open-drain output pwm frequency to 200Hz \n"};
 
 int doPwmFreqWrite(int argc, char *argv[])
 {
