@@ -79,7 +79,7 @@ def setDacV(stack, channel, value):
         bus.close()
         raise
     bus.close()
-    return 1
+
 
 def getDacV(stack, channel):
     if stack < 0 or stack > 7:
@@ -117,7 +117,7 @@ def setOdPwm(stack, channel, value):
         bus.close()
         raise
     bus.close()
-    return 1
+
 
 def getOdPwm(stack, channel):
     if stack < 0 or stack > 7:
@@ -156,9 +156,8 @@ def setRelayCh(stack, channel, value):
         bus.write_byte_data(DEVICE_ADDRESS + stack, register, channel)
     except Exception:
         bus.close()
-        return -1
+        raise
     bus.close()
-    return 1
 
 
 def setRelays(stack, value):
@@ -204,8 +203,6 @@ def getRelayCh(stack, channel):
     if channel < 1 or channel > 8:
         raise ValueError('Invalid channel number')
     val = getRelays(stack)
-    if val < 0:
-        return -1
     return (val >> (channel - 1)) & 1
 
 
@@ -271,7 +268,6 @@ def setGpioDir(stack, dir):
         bus.close()
         raise
     bus.close()
-    return 1
 
 
 def getGpio(stack):
@@ -309,9 +305,9 @@ def setGpioPin(stack, pin, val):
         bus.write_byte_data(DEVICE_ADDRESS + stack, register, pin)
     except Exception:
         bus.close()
-        return -1
+        raise
     bus.close()
-    return 1
+
 
 def cfgOptoEdgeCount(stack, channel, state):
     if stack < 0 or stack > 7:
@@ -339,12 +335,11 @@ def cfgOptoEdgeCount(stack, channel, state):
             rising &= ~(1 << (channel -1))
         bus.write_byte_data(DEVICE_ADDRESS + stack,I2C_MEM_OPTO_IT_RISING_ADD, rising)
         bus.write_byte_data(DEVICE_ADDRESS + stack, I2C_MEM_OPTO_IT_FALLING_ADD, falling);
-
     except Exception:
         bus.close()
-        return -1
+        raise
     bus.close()
-    return 1
+
 
 def getOptoCount(stack, channel):
     if stack < 0 or stack > 7:
@@ -358,7 +353,7 @@ def getOptoCount(stack, channel):
         count = buff[0] + buff[1] * 0x100 + buff[2] * 0x10000 + buff[3] * 0x1000000
     except Exception:
         bus.close()
-        return -1
+        raise
     bus.close()
     return count
 
@@ -373,9 +368,9 @@ def rstOptoCount(stack, channel):
         bus.write_byte_data(DEVICE_ADDRESS + stack, I2C_MEM_OPTO_CNT_RST_ADD, channel)
     except Exception:
         bus.close()
-        return -1
+        raise
     bus.close()
-    return 1
+
 
 def cfgOptoEncoder(stack, channel, state):
     if stack < 0 or stack > 7:
@@ -395,9 +390,9 @@ def cfgOptoEncoder(stack, channel, state):
         bus.write_byte_data(DEVICE_ADDRESS + stack, I2C_MEM_OPTO_ENC_ENABLE_ADD, encoders)
     except Exception:
         bus.close()
-        return -1
+        raise
     bus.close()
-    return 1
+
 
 def getOptoEncoderCount(stack, channel):
     if stack < 0 or stack > 7:
@@ -428,7 +423,6 @@ def resetOptoEncoderCount(stack, channel):
         bus.close()
         raise
     bus.close()
-    return 1
 
 
 def owbGetTemp(stack, channel):
@@ -475,7 +469,7 @@ def owbScan(stack):
         bus.close()
         raise
     bus.close()   
-    return 1
+
 
 def owbGetSnsId(stack, channel):
     I2C_MEM_1WB_ROM_CODE_IDX =212
