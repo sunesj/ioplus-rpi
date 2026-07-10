@@ -151,18 +151,12 @@ def setRelayCh(stack, channel, value):
     bus = smbus2.SMBus(1)
     RELAY_SET_ADD = 1
     RELAY_CLR_ADD = 2
-    if value == 0:
-        try:
-            bus.write_byte_data(DEVICE_ADDRESS + stack, RELAY_CLR_ADD, channel)
-        except Exception:
-            bus.close()
-            return -1
-    else:
-        try:
-            bus.write_byte_data(DEVICE_ADDRESS + stack, RELAY_SET_ADD, channel)
-        except Exception:
-            bus.close()
-            return -1
+    register = RELAY_CLR_ADD if value == 0 else RELAY_SET_ADD
+    try:
+        bus.write_byte_data(DEVICE_ADDRESS + stack, register, channel)
+    except Exception:
+        bus.close()
+        return -1
     bus.close()
     return 1
 
