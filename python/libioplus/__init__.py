@@ -22,14 +22,11 @@ def getAdcV(stack, channel):
             dataA = data
             retry -= 1
             data = bus.read_word_data(DEVICE_ADDRESS + stack, ADC_VAL_MV_ADD + 2 * (channel - 1))
-        val = data / 1000.0
-    except Exception:
+        if retry == 0:
+            raise Exception('Spurious read detected')
+        return data / 1000.0
+    finally:
         bus.close()
-        raise
-    bus.close()
-    if retry == 0:
-        raise Exception('Spurious read detected')
-    return val
 
 
 def getAdcRaw(stack, channel):
@@ -48,14 +45,11 @@ def getAdcRaw(stack, channel):
             dataA = data
             retry -= 1
             data = bus.read_word_data(DEVICE_ADDRESS + stack, ADC_VAL_RAW_ADD + 2 * (channel - 1));
-        val = data;
-    except Exception:
+        if retry == 0:
+            raise Exception('Spurious read detected')
+        return data
+    finally:
         bus.close()
-        raise
-    bus.close()
-    if retry == 0:
-        raise Exception('Spurious read detected')
-    return val
 
 
 def setDacV(stack, channel, value):
@@ -75,10 +69,8 @@ def setDacV(stack, channel, value):
 
     try:
         bus.write_word_data(DEVICE_ADDRESS + stack, DAC_VAL_MV_ADD + 2 * (channel - 1), raw)
-    except Exception:
+    finally:
         bus.close()
-        raise
-    bus.close()
 
 
 def getDacV(stack, channel):
@@ -92,12 +84,9 @@ def getDacV(stack, channel):
 
     try:
         raw = bus.read_word_data(DEVICE_ADDRESS + stack, DAC_VAL_MV_ADD + 2 * (channel - 1))
-        val = float(raw) / 1000
+        return float(raw) / 1000
+    finally:
         bus.close()
-        return val
-    except Exception:
-        bus.close()
-        raise
 
 
 def setOdPwm(stack, channel, value):
@@ -113,10 +102,8 @@ def setOdPwm(stack, channel, value):
     OD_PWM_VAL_RAW_ADD = 48
     try:
         bus.write_word_data(DEVICE_ADDRESS + stack, OD_PWM_VAL_RAW_ADD + 2 * (channel - 1), value)
-    except Exception:
+    finally:
         bus.close()
-        raise
-    bus.close()
 
 
 def getOdPwm(stack, channel):
@@ -129,11 +116,9 @@ def getOdPwm(stack, channel):
     try:
         raw = bus.read_word_data(DEVICE_ADDRESS + stack, OD_PWM_VAL_RAW_ADD + 2 * (channel - 1))
         # TODO: doesn't need transformation?
-        bus.close()
         return raw
-    except Exception:
+    finally:
         bus.close()
-        raise
 
 def _fixed_setOdPwm(stack, channel, value):
     return setOdPwm(stack, channel, int(value * 100))
@@ -154,10 +139,8 @@ def setRelayCh(stack, channel, value):
     register = RELAY_CLR_ADD if value == 0 else RELAY_SET_ADD
     try:
         bus.write_byte_data(DEVICE_ADDRESS + stack, register, channel)
-    except Exception:
+    finally:
         bus.close()
-        raise
-    bus.close()
 
 
 def setRelays(stack, value):
@@ -169,10 +152,8 @@ def setRelays(stack, value):
     RELAY_VAL_ADD = 0;
     try:
         bus.write_byte_data(DEVICE_ADDRESS + stack, RELAY_VAL_ADD, value)
-    except Exception:
+    finally:
         bus.close()
-        raise
-    bus.close()
 
 
 def getRelays(stack):
@@ -188,13 +169,11 @@ def getRelays(stack):
             valA = val
             retry -= 1
             val = bus.read_byte_data(DEVICE_ADDRESS + stack, RELAY_VAL_ADD)
-    except Exception:
+        if retry == 0:
+            raise Exception('Spurious read detected')
+        return val
+    finally:
         bus.close()
-        raise
-    bus.close()
-    if retry == 0:
-        raise Exception('Spurious read detected')
-    return val
 
 
 def getRelayCh(stack, channel):
@@ -217,20 +196,18 @@ def getOptoCh(stack, channel):
     val = 258
     retry = 10
     try:
-      while valA != val and retry > 0:
-        valA = val
-        retry -= 1
-        val = bus.read_byte_data(DEVICE_ADDRESS + stack, OPTO_IN_ADD)
-    except Exception:
+        while valA != val and retry > 0:
+            valA = val
+            retry -= 1
+            val = bus.read_byte_data(DEVICE_ADDRESS + stack, OPTO_IN_ADD)
+        if retry == 0:
+            raise Exception('Spurious read detected')
+        if val & (1 << (channel - 1)):
+            return 1
+        else:
+            return 0
+    finally:
         bus.close()
-        raise
-    bus.close()
-    if retry == 0:
-        raise Exception('Spurious read detected')
-    if val & (1 << (channel - 1)):
-        return 1
-    else:
-        return 0
 
 
 def getOpto(stack):
@@ -246,13 +223,11 @@ def getOpto(stack):
             valA = val
             retry -= 1
             val = bus.read_byte_data(DEVICE_ADDRESS + stack, OPTO_IN_ADD)
-    except Exception:
+        if retry == 0:
+            raise Exception('Spurious read detected')
+        return val
+    finally:
         bus.close()
-        raise
-    bus.close()
-    if retry == 0:
-        raise Exception('Spurious read detected')
-    return val
 
 
 def setGpioDir(stack, dir):
@@ -264,10 +239,8 @@ def setGpioDir(stack, dir):
     GPIO_DIR_ADD = 7
     try:
         bus.write_byte_data(DEVICE_ADDRESS + stack, GPIO_DIR_ADD, dir)
-    except Exception:
+    finally:
         bus.close()
-        raise
-    bus.close()
 
 
 def getGpio(stack):
@@ -283,13 +256,11 @@ def getGpio(stack):
             valA = val
             retry -= 1
             val = bus.read_byte_data(DEVICE_ADDRESS + stack, GPIO_VAL_ADD)
-    except Exception:
+        if retry == 0:
+            raise Exception('Spurious read detected')
+        return val
+    finally:
         bus.close()
-        raise
-    bus.close()
-    if retry == 0:
-        raise Exception('Spurious read detected')
-    return val
 
 
 def setGpioPin(stack, pin, val):
@@ -303,10 +274,8 @@ def setGpioPin(stack, pin, val):
     register = GPIO_CLR_ADD if val == 0 else GPIO_SET_ADD
     try:
         bus.write_byte_data(DEVICE_ADDRESS + stack, register, pin)
-    except Exception:
+    finally:
         bus.close()
-        raise
-    bus.close()
 
 
 def cfgOptoEdgeCount(stack, channel, state):
@@ -335,10 +304,8 @@ def cfgOptoEdgeCount(stack, channel, state):
             rising &= ~(1 << (channel -1))
         bus.write_byte_data(DEVICE_ADDRESS + stack,I2C_MEM_OPTO_IT_RISING_ADD, rising)
         bus.write_byte_data(DEVICE_ADDRESS + stack, I2C_MEM_OPTO_IT_FALLING_ADD, falling);
-    except Exception:
+    finally:
         bus.close()
-        raise
-    bus.close()
 
 
 def getOptoCount(stack, channel):
@@ -351,11 +318,9 @@ def getOptoCount(stack, channel):
     try:
         buff = bus.read_i2c_block_data(DEVICE_ADDRESS + stack, I2C_MEM_OPTO_EDGE_COUNT_ADD + 4 * (channel - 1), 4)
         count = buff[0] + buff[1] * 0x100 + buff[2] * 0x10000 + buff[3] * 0x1000000
-    except Exception:
+        return count
+    finally:
         bus.close()
-        raise
-    bus.close()
-    return count
 
 def rstOptoCount(stack, channel):
     if stack < 0 or stack > 7:
@@ -366,10 +331,8 @@ def rstOptoCount(stack, channel):
     bus = smbus2.SMBus(1)
     try:
         bus.write_byte_data(DEVICE_ADDRESS + stack, I2C_MEM_OPTO_CNT_RST_ADD, channel)
-    except Exception:
+    finally:
         bus.close()
-        raise
-    bus.close()
 
 
 def cfgOptoEncoder(stack, channel, state):
@@ -388,10 +351,8 @@ def cfgOptoEncoder(stack, channel, state):
         else:
             encoders &= ~(1 << (channel - 1))
         bus.write_byte_data(DEVICE_ADDRESS + stack, I2C_MEM_OPTO_ENC_ENABLE_ADD, encoders)
-    except Exception:
+    finally:
         bus.close()
-        raise
-    bus.close()
 
 
 def getOptoEncoderCount(stack, channel):
@@ -404,11 +365,9 @@ def getOptoEncoderCount(stack, channel):
     try:
         buff = bus.read_i2c_block_data(DEVICE_ADDRESS + stack, I2C_MEM_OPTO_ENC_COUNT_ADD + 4 * (channel - 1), 4)
         count = struct.unpack('i', bytearray(buff)) #int.from_bytes(buff, byteorder='big', signed=True)
-    except Exception:
+        return count
+    finally:
         bus.close()
-        raise
-    bus.close()
-    return count
 
 def resetOptoEncoderCount(stack, channel):
     if stack < 0 or stack > 7:
@@ -419,10 +378,8 @@ def resetOptoEncoderCount(stack, channel):
     bus = smbus2.SMBus(1)
     try:
         bus.write_byte_data(DEVICE_ADDRESS + stack, I2C_MEM_OPTO_ENC_CNT_RST_ADD, channel)
-    except Exception:
+    finally:
         bus.close()
-        raise
-    bus.close()
 
 
 def owbGetTemp(stack, channel):
@@ -431,19 +388,15 @@ def owbGetTemp(stack, channel):
     if stack < 0 or stack > 7:
         raise ValueError('Invalid stack level')
     bus = smbus2.SMBus(1)
-    temp = 0
     try:
         nr = bus.read_byte_data(DEVICE_ADDRESS + stack, I2C_MEM_1WB_DEV)
         if channel > nr or channel < 1:
-            bus.close()
             raise ValueError('Invalid channel number')
         data = bus.read_word_data(DEVICE_ADDRESS + stack, I2C_MEM_1WB_T1 + 2 * (channel - 1))
-        temp = data / 100
-    except Exception:
+        return data / 100
+    finally:
         bus.close()
-        raise
-    bus.close()
-    return temp
+
 
 def owbGetSnsNo(stack):
     I2C_MEM_1WB_DEV = 211
@@ -451,12 +404,11 @@ def owbGetSnsNo(stack):
         raise ValueError('Invalid stack level')
     bus = smbus2.SMBus(1)
     try:
-         nr = bus.read_byte_data(DEVICE_ADDRESS + stack, I2C_MEM_1WB_DEV)
-    except Exception:
+        nr = bus.read_byte_data(DEVICE_ADDRESS + stack, I2C_MEM_1WB_DEV)
+        return nr
+    finally:
         bus.close()
-        raise
-    bus.close()
-    return nr
+
 
 def owbScan(stack):
     I2C_MEM_1WB_START_SEARCH = 221
@@ -465,10 +417,8 @@ def owbScan(stack):
     bus = smbus2.SMBus(1)
     try:
         bus.write_byte_data(DEVICE_ADDRESS + stack, I2C_MEM_1WB_START_SEARCH,1 )
-    except Exception:
+    finally:
         bus.close()
-        raise
-    bus.close()   
 
 
 def owbGetSnsId(stack, channel):
@@ -485,12 +435,9 @@ def owbGetSnsId(stack, channel):
     try:
         nr = bus.read_byte_data(DEVICE_ADDRESS + stack, I2C_MEM_1WB_DEV)
         if channel > nr or channel < 1:
-            bus.close()
             raise ValueError('Invalid channel number') 
         bus.write_byte_data(DEVICE_ADDRESS + stack, I2C_MEM_1WB_ROM_CODE_IDX, channel - 1)
         buff = bus.read_i2c_block_data(DEVICE_ADDRESS + stack, I2C_MEM_1WB_ROM_CODE, 8)
-    except Exception:
+        return buff
+    finally:
         bus.close()
-        raise
-    bus.close()
-    return buff
