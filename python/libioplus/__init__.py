@@ -304,11 +304,9 @@ def setGpioPin(stack, pin, val):
     bus = smbus2.SMBus(1)
     GPIO_SET_ADD = 5
     GPIO_CLR_ADD = 6
+    register = GPIO_CLR_ADD if val == 0 else GPIO_SET_ADD
     try:
-        if val == 0:
-            bus.write_byte_data(DEVICE_ADDRESS + stack, GPIO_CLR_ADD, pin)
-        else:
-            bus.write_byte_data(DEVICE_ADDRESS + stack, GPIO_SET_ADD, pin)
+        bus.write_byte_data(DEVICE_ADDRESS + stack, register, pin)
     except Exception:
         bus.close()
         return -1
