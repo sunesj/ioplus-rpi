@@ -177,8 +177,6 @@ def getRelays(stack):
 
 
 def getRelayCh(stack, channel):
-    if stack < 0 or stack > 7:
-        raise ValueError('Invalid stack level')
     if channel < 1 or channel > 8:
         raise ValueError('Invalid channel number')
     val = getRelays(stack)
@@ -186,28 +184,10 @@ def getRelayCh(stack, channel):
 
 
 def getOptoCh(stack, channel):
-    if stack < 0 or stack > 7:
-        raise ValueError('Invalid stack level')
     if channel < 1 or channel > 8:
         raise ValueError('Invalid channel number')
-    bus = smbus2.SMBus(1)
-    OPTO_IN_ADD = 3
-    valA = 257
-    val = 258
-    retry = 10
-    try:
-        while valA != val and retry > 0:
-            valA = val
-            retry -= 1
-            val = bus.read_byte_data(DEVICE_ADDRESS + stack, OPTO_IN_ADD)
-        if retry == 0:
-            raise Exception('Spurious read detected')
-        if val & (1 << (channel - 1)):
-            return 1
-        else:
-            return 0
-    finally:
-        bus.close()
+    val = getOpto(stack)
+    return (val >> (channel - 1)) & 1
 
 
 def getOpto(stack):
